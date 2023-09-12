@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Example</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Jugoistok Račun za struju</h1>
+        <form id="myForm">
+            <input type="text" id="textInput" placeholder="ED broj">
+            <select id="monthSelect">
+                <option value="31.01.">January</option>
+                <option value="28.02.">February</option>
+                <option value="31.03.">March</option>
+                <option value="30.04.">April</option>
+                <option value="31.05.">May</option>
+                <option value="30.06.">June</option>
+                <option value="31.07.">July</option>
+                <option value="31.08.">August</option>
+                <option value="30.09.">September</option>
+                <option value="31.10.">October</option>
+                <option value="30.11.">November</option>
+                <option value="31.12.">December</option>
+            </select>
+            <select id="yearSelect">
+                <!-- Assuming you want years from 2010 to the current year -->
+                <!-- You can generate these options using JavaScript for more flexibility -->
+                <!-- Here, I've included options from 2010 to 2030 -->
+                <!-- You can adjust this range as needed -->
+                <script>
+                    var currentYear = new Date().getFullYear();
+                    var startYear = currentYear - 2;
+                    var yearSelect = document.getElementById("yearSelect");
+                    for (var year = currentYear; year >= startYear; year--) {
+                        var option = document.createElement("option");
+                        option.value = year;
+                        option.text = year;
+                        yearSelect.appendChild(option);
+                    }
+                </script>
+            </select>
+            <button type="button" onclick="callFunction()">Submit</button>
+        </form>
+        <!-- Display last 5 entries from the cookie as a drop-down -->
+        <label for="previousEntries">Prethodni ED brojevi:</label>
+        <select id="previousEntries"></select>
+    </div>
+    <script>
+        // Function to set a cookie
+        function setCookie(name, value, days) {
+            var expires = "";
+            if (days) {
+                var date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "") + expires + "; path=/";
+        }
+
+        // Function to get the value of a cookie by name
+        function getCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        // Function to save the last 5 entries in a cookie
+        function saveLastEntries(entry) {
+            var previousEntries = getCookie("previousEntries");
+            if (!previousEntries) {
+                previousEntries = [];
+            } else {
+                previousEntries = JSON.parse(previousEntries);
+            }
+
+            // Add the new entry and limit the list to 5 items
+            previousEntries.unshift(entry);
+            if (previousEntries.length > 5) {
+                previousEntries.pop();
+            }
+
+            // Save the updated list in the cookie
+            setCookie("previousEntries", JSON.stringify(previousEntries), 365);
+        }
+
+        // Function to load and display the last 5 entries from the cookie
+        function loadLastEntries() {
+            var previousEntries = getCookie("previousEntries");
+            var previousEntriesDropdown = document.getElementById("previousEntries");
+
+            if (previousEntries) {
+                previousEntries = JSON.parse(previousEntries);
+                previousEntriesDropdown.innerHTML = "";
+                for (var i = 0; i < previousEntries.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = previousEntries[i];
+                    option.text = previousEntries[i];
+                    previousEntriesDropdown.appendChild(option);
+                }
+            }
+        }
+
+
+        function populateTextInput() {
+            var selectedValue = document.getElementById("previousEntries").value;
+            document.getElementById("textInput").value = selectedValue;
+        }
+
+        // Call this function when a value is selected from the drop-down
+        document.getElementById("previousEntries").addEventListener("change", populateTextInput);
+
+        loadLastEntries();
+
+        function callFunction() {
+            var textValue = document.getElementById("textInput").value;
+            var selectedMonth = document.getElementById("monthSelect").value;
+            var selectedYear = document.getElementById("yearSelect").value;
+
+            var url = "http://www.jugoistok.com/prikazracuna/sap_racun.php?ed_broj=" + textValue + "&datum_obr=" + selectedMonth + selectedYear;
+            saveLastEntries(textValue);
+            loadLastEntries();
+
+            window.open(url, '_blank')
+        }
+    </script>
+</body>
+
+</html>
